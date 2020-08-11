@@ -1,4 +1,4 @@
-package com.mongodb.quickstart;
+package com.mongodb.quickstart.crud;
 
 public class HelloMongoDB {
 

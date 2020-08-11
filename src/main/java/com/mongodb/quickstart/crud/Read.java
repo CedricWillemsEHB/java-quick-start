@@ -1,4 +1,4 @@
-package com.mongodb.quickstart;
+package com.mongodb.quickstart.crud;
 
 import com.mongodb.client.*;
 import org.bson.Document;

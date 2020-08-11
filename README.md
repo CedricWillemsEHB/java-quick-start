@@ -24,24 +24,24 @@ mvn clean compile
 - Run the `HelloMongoDB` class: 
 
 ```sh
-mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.HelloMongoDB"
+mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.crud.HelloMongoDB"
 ```
 - Run the `Connection` class: 
 
 ```sh
-mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.Connection" -Dmongodb.uri=mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority
+mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.crud.Connection" -Dmongodb.uri=mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority
 ```
 
 - Run the `Create` class:
 
 ```sh
-mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.Create" -Dmongodb.uri=mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority
+mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.crud.Create" -Dmongodb.uri=mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority
 ```
 
 - Run the `Read` class:
 
 ```sh
-mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.Read" -Dmongodb.uri=mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority
+mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.crud.Read" -Dmongodb.uri=mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority
 ```
 
 # Author
