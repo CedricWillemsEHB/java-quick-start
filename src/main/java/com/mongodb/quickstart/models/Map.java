@@ -1,18 +1,19 @@
 package com.mongodb.quickstart.models;
 
+import org.bson.types.ObjectId;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class Map implements Serializable {
-    String id;
+    ObjectId id;
     List<Room> map;
     List<Room> mainPath = new ArrayList<Room>();
     List<Room> subPaths = new ArrayList<Room>();
     int x;
     int y;
-
     public Map() {
     }
 
@@ -31,11 +32,11 @@ public class Map implements Serializable {
         // TODO Auto-generated constructor stub
     }
 
-    public String getId() {
+    public ObjectId getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(ObjectId id) {
         this.id = id;
     }
 

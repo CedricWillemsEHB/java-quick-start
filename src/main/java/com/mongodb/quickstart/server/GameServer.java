@@ -1,26 +1,26 @@
 package com.mongodb.quickstart.server;
 
-import com.mongodb.quickstart.models.ICharacters;
-import com.mongodb.quickstart.models.Map;
-import com.mongodb.quickstart.models.Room;
-import com.mongodb.quickstart.models.Serializator;
+import com.mongodb.quickstart.models.*;
 
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
-public class GameServer {
+public class GameServer implements LobyListener {
     private ServerSocket ss;
     private List<ServerSideConnection> players;
     private int numPlayers= 0;
     private int numDungeonmaster;
     private boolean partyReady;
+    private List<Loby> lobies;
 
     public GameServer() {
         players = new ArrayList<ServerSideConnection>();
         try {
             ss = new ServerSocket(51734);
+            lobies= new ArrayList<>();
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
@@ -34,22 +34,40 @@ public class GameServer {
                     Socket s = ss.accept();
 
                     System.out.println("Player #" + (numPlayers + 1) + " has connected.");
-                    ServerSideConnection ssc = new ServerSideConnection(s, numPlayers);
+                    ServerSideConnection ssc = new ServerSideConnection(s, numPlayers,this);
                     players.add(ssc);
                     Thread t = new Thread(ssc);
                     t.start();
                     numPlayers++;
                 }
-
-                if(numPlayers == 5) {
-                    break;
-                }
             }
-
-            System.out.println("We have enough players. No longer accpting connections.");
         }catch(IOException ex) {
             System.out.println("IOException from acceptConnections()");
         }
+    }
+
+    @Override
+    public int makeLobyGetID() {
+        Loby loby = null;
+        do{
+            Random rand = new Random();
+            //generate random values from 0-1000000
+            int int_random = rand.nextInt(1000000);
+            loby = new Loby(int_random);
+        } while (!lobies.contains(loby));
+
+        return loby.getId();
+    }
+
+    @Override
+    public List<Object> getPlayersInLoby(int id) {
+        List<Object> playersInLoby = new ArrayList<>();
+        for (ServerSideConnection p : players) {
+            if (p.getLobyId() == id){
+                playersInLoby.add(p);
+            }
+        }
+        return playersInLoby;
     }
 
     private class ServerSideConnection implements Runnable {
@@ -57,16 +75,33 @@ public class GameServer {
         private DataInputStream dataIn;
         private DataOutputStream dataOut;
         private int playerID;
+        private int lobyId = -1;
+        private List<ServerSideConnection> playersInLoby = new ArrayList<>();
+        private LobyListener lobyListener;
 
-        public ServerSideConnection(Socket s, int id) {
+
+        public ServerSideConnection(Socket s, int playerID, LobyListener lobyListener) {
             socket = s;
-            playerID = id;
+            this.playerID = playerID;
+            this.lobyListener = lobyListener;
             try {
                 dataIn = new DataInputStream(socket.getInputStream());
                 dataOut = new DataOutputStream(socket.getOutputStream());
             } catch (IOException ex) {
                 System.out.println("IOException from run() SSC");
             }
+        }
+
+        public int getPlayerID() {
+            return playerID;
+        }
+
+        public int getLobyId() {
+            return lobyId;
+        }
+
+        public void setLobyId(int lobyId) {
+            this.lobyId = lobyId;
         }
 
         @Override
@@ -83,7 +118,7 @@ public class GameServer {
                     //TODO
                     int condition=dataIn.readInt();
                     switch(condition) {
-                        case 1:
+                        case ServerContract.SHOW_MAP:
                             if(firstTime) {
                                 numDungeonmaster = playerID;
                                 firstTime = false;
@@ -126,7 +161,7 @@ public class GameServer {
                             }
 
                             break;
-                        case 2:
+                        case ServerContract.GO_NORTH:
                             receiverID=0;
                             for(ServerSideConnection player : players) {
                                 if(receiverID!=playerID) {
@@ -136,7 +171,7 @@ public class GameServer {
                                 receiverID++;
                             }
                             break;
-                        case 3:
+                        case ServerContract.GO_SOUTH:
                             receiverID=0;
                             for(ServerSideConnection player : players) {
                                 if(receiverID!=playerID) {
@@ -146,7 +181,7 @@ public class GameServer {
                                 receiverID++;
                             }
                             break;
-                        case 4:
+                        case ServerContract.GO_EAST:
                             receiverID=0;
                             for(ServerSideConnection player : players) {
                                 if(receiverID!=playerID) {
@@ -156,7 +191,7 @@ public class GameServer {
                                 receiverID++;
                             }
                             break;
-                        case 5:
+                        case ServerContract.GO_WEST:
                             receiverID=0;
                             for(ServerSideConnection player : players) {
                                 if(receiverID!=playerID) {
@@ -166,7 +201,7 @@ public class GameServer {
                                 receiverID++;
                             }
                             break;
-                        case 6:
+                        case ServerContract.SET_UP_FIGHT:
                             List<ICharacters> enemies = new ArrayList<ICharacters>();
                             List<ServerSideConnection> playersInFight = new ArrayList<ServerSideConnection>();
                             str = "";
@@ -315,6 +350,7 @@ public class GameServer {
                 System.out.println("IOException from sendButtonNum() SSC");
             }
         }
+
         //Close cooection
         public void closeConnection() {
             try {
@@ -325,6 +361,9 @@ public class GameServer {
             }
         }
     }
+
+
+
     public static void main(String[] args) {
         GameServer gs = new GameServer();
         gs.acceptConnections();

@@ -73,8 +73,22 @@ public class Player {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Player other = (Player) obj;
+        if (name != other.getName())
+            return false;
+        return true;
+    }
+
+    @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("Grade{");
+        final StringBuffer sb = new StringBuffer("Player{");
         sb.append("id=").append(id);
         sb.append(", name=").append(name);
         sb.append(", hp=").append(hp);

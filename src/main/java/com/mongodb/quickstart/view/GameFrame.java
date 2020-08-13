@@ -28,8 +28,10 @@ public class GameFrame extends JFrame {
     private int currentY;
     private Room currentRoom;
     private Player player;
+    private User user;
     private String imageUrl = "image\\default\\";
-    private ClientSideConnection csc;
+    //TODO test class ClientSideConnectionTest
+    private ClientSideConnectionTest csc;
 
     public GameFrame() {
         super("Hello world");
@@ -58,6 +60,121 @@ public class GameFrame extends JFrame {
             public void makeMap() throws IOException {
                 if (map == null) {
                     generatePath();
+                    //TODO test class ClientSideConnectionTest
+                    csc.sendMakeMap();
+                }
+                generateMapImage();
+                showMapImage();
+
+            }
+
+            @Override
+            public void clickNorth() throws IOException {
+                // Go up
+                if(currentRoom.isGoUp()) {
+                    csc.sendNorth();
+                    goNorth();
+                    generateMapImage();
+                    showMapImage();
+                }
+            }
+
+            @Override
+            public void clickSouth() throws IOException {
+                // Go down
+                if(currentRoom.isGoDown()) {
+                    csc.sendSouth();
+                    goSouth();
+                    generateMapImage();
+                    showMapImage();
+                }
+            }
+
+            @Override
+            public void clickEast() throws IOException {
+                // Go right
+                if(currentRoom.isGoRight()) {
+                    csc.sendEast();
+                    goEast();
+                    generateMapImage();
+                    showMapImage();
+                }
+            }
+
+            @Override
+            public void clickWest() throws IOException {
+                // Go left
+                if(currentRoom.isGoLeft()) {
+                    csc.sendWest();
+                    goWest();
+                    generateMapImage();
+                    showMapImage();
+                }
+
+            }
+
+            @Override
+            public void clickFight() throws IOException {
+                // The player attack the monster
+                System.out.println(player.getName() + " fight the monsters!");
+                attackEnemy();
+            }
+
+            @Override
+            public void clickRun() throws IOException {
+                // The player run away from the monster
+                System.out.println(player.getName() + " run away from the monsters!");
+                csc.sendButtonNum(9);
+            }
+        });
+        add(imagePanel, BorderLayout.CENTER);
+        add(toolbar, BorderLayout.SOUTH);
+
+        setSize(600,600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+        //If player isn't a dungeon master, wait for a input of the dungeon master
+        if (!player.isDM()) {
+            try {
+                //Show start page for players
+                BufferedImage image = ImageIO.read(new File(imageUrl + "startPlayer.png"));
+                imagePanel.setImage(image);
+            } catch(Exception e) {
+                System.out.println(e.getMessage());
+            }
+            //Disable the buttons
+            toolbar.toggleButtons(player.isDM());
+            //wait for a input of the dungeon master
+            nextAction();
+        } else {
+            try {
+                //Show start page for dungeon master
+                BufferedImage image = ImageIO.read(new File(imageUrl + "startDM.png"));
+                imagePanel.setImage(image);
+            } catch(Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+    public GameFrame(User user,Player player) {
+        super("Dungeons & Dragons | Adventurer: "+player.getName());
+        //Make a new client side Socket and connect to the server side
+        connectToServer();
+        setLayout(new BorderLayout());
+
+        imagePanel = new ImagePanel();
+        toolbar = new Toolbar(player.isDM());
+        this.user = user;
+        this.player = player;
+        //Setup actions for the buttons
+        toolbar.setStringListener(new StringListener() {
+            @Override
+            public void makeMap() throws IOException {
+                if (map == null) {
+                    generatePath();
+                    //TODO test class ClientSideConnectionTest
+                    csc.setMap(map);
+                    csc.setCurrentRoom(currentRoom);
                     csc.sendMakeMap();
                 }
                 generateMapImage();
@@ -169,12 +286,14 @@ public class GameFrame extends JFrame {
         System.out.println("Command :" + n);
         switch(n) {
             //Show map if you're a player
-            case 1:
+            case ServerContract.SHOW_MAP:
                 if(!player.isDM()) {
                     System.out.println("case 1");
                     initializeMap();
                     System.out.println("initializeMap");
                     map = csc.receiveRooms();
+                    //TODO test class ClientSideConnectionTest
+                    csc.setMap(map);
                     System.out.println("csc.receiveRooms() : " + map.toString());
                     startMapPlayer();
                     System.out.println("startMapPlayer");
@@ -191,7 +310,7 @@ public class GameFrame extends JFrame {
                 nextAction();
                 break;
             //Go North
-            case 2:
+            case ServerContract.GO_NORTH:
                 goNorth();
                 try {
                     generateMapImage();
@@ -203,7 +322,7 @@ public class GameFrame extends JFrame {
                 nextAction();
                 break;
             //Go South
-            case 3:
+            case ServerContract.GO_SOUTH:
                 goSouth();
                 try {
                     generateMapImage();
@@ -215,7 +334,7 @@ public class GameFrame extends JFrame {
                 nextAction();
                 break;
             //Go East
-            case 4:
+            case ServerContract.GO_EAST:
                 goEast();
                 try {
                     generateMapImage();
@@ -227,7 +346,7 @@ public class GameFrame extends JFrame {
                 nextAction();
                 break;
             //Go West
-            case 5:
+            case ServerContract.GO_WEST:
                 goWest();
                 try {
                     generateMapImage();
@@ -239,7 +358,7 @@ public class GameFrame extends JFrame {
                 nextAction();
                 break;
             //TODO Set player in the fight system if you're a player
-            case 6:
+            case ServerContract.SET_UP_FIGHT:
                 //Enable the buttons for the player to fight
                 if(!player.isDM()) {
                     toolbar.untoggleButtons(player.isDM());
@@ -249,7 +368,7 @@ public class GameFrame extends JFrame {
                 }
                 break;
             //TODO Get result of the fight and continue exploring if you're dungeon master
-            case 7:
+            case ServerContract.GET_FROM_FIGHT:
                 try {
                     if(player.isDM()) {
                         if(currentRoom.checkEventAvailable()) {
@@ -287,7 +406,8 @@ public class GameFrame extends JFrame {
     }
     //Connect to the client side
     public void connectToServer() {
-        csc = new ClientSideConnection();
+        //TODO test class ClientSideConnectionTest
+        csc = new ClientSideConnectionTest();
     }
     //innerClass client side
     public class ClientSideConnection{
@@ -559,6 +679,9 @@ public class GameFrame extends JFrame {
         currentX = map.getMainPath().get(0).getX();
         currentY = map.getMainPath().get(0).getY();
         currentRoom = map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY)));
+        //TODO test class ClientSideConnectionTest
+        csc.setMap(map);
+        csc.setCurrentRoom(currentRoom);
     }
     //Start the map for the players
     public void startMapPlayer() {
@@ -567,6 +690,9 @@ public class GameFrame extends JFrame {
         currentX = map.getMainPath().get(0).getX();
         currentY = map.getMainPath().get(0).getY();
         currentRoom = map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY)));
+        //TODO test class ClientSideConnectionTest
+        csc.setMap(map);
+        csc.setCurrentRoom(currentRoom);
         System.out.println(map.showMapWithEvent());
     }
     //Show the map on GUI
@@ -772,6 +898,8 @@ public class GameFrame extends JFrame {
         if(currentRoom.isGoUp()) {
             currentY -= 1;
             currentRoom = map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY)));
+            //TODO test class ClientSideConnectionTest
+            csc.setCurrentRoom(currentRoom);
             System.out.println("Go: " +map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY))).toString());
             if(currentRoom.checkEventAvailable() && player.isDM()) {
                 startFight();
@@ -783,6 +911,8 @@ public class GameFrame extends JFrame {
         if(currentRoom.isGoDown()) {
             currentY += 1;
             currentRoom = map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY)));
+            //TODO test class ClientSideConnectionTest
+            csc.setCurrentRoom(currentRoom);
             System.out.println("Go: " +map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY))).toString());
             if(currentRoom.checkEventAvailable() && player.isDM()) {
                 startFight();
@@ -794,6 +924,8 @@ public class GameFrame extends JFrame {
         if(currentRoom.isGoRight()) {
             currentX += 1;
             currentRoom = map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY)));
+            //TODO test class ClientSideConnectionTest
+            csc.setCurrentRoom(currentRoom);
             System.out.println("Go: " +map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY))).toString());
             if(currentRoom.checkEventAvailable() && player.isDM()) {
                 startFight();
@@ -805,6 +937,8 @@ public class GameFrame extends JFrame {
         if(currentRoom.isGoLeft()) {
             currentX -= 1;
             currentRoom = map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY)));
+            //TODO test class ClientSideConnectionTest
+            csc.setCurrentRoom(currentRoom);
             System.out.println("Go: " +map.getMap().get(map.getMap().indexOf(new Room(currentX, currentY))).toString());
             if(currentRoom.checkEventAvailable() && player.isDM()) {
                 startFight();
