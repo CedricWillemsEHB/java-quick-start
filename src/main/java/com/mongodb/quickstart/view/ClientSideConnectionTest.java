@@ -1,9 +1,6 @@
 package com.mongodb.quickstart.view;
 
-import com.mongodb.quickstart.models.ICharacters;
-import com.mongodb.quickstart.models.Map;
-import com.mongodb.quickstart.models.Room;
-import com.mongodb.quickstart.models.Serializator;
+import com.mongodb.quickstart.models.*;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -33,6 +30,48 @@ public class ClientSideConnectionTest {
         }
     }
 
+    public int makeLobby(){
+        try {
+            //Send condition
+            dataOut.writeInt(ServerContract.MAKE_LOBBY);
+            System.out.println("ServerContract.MAKE_LOBBY : ");
+            dataOut.flush();
+            System.out.println("dataOut.flush()");
+            int i = dataIn.readInt();
+            System.out.println("ServerContract.MAKE_LOBBY : "+i);
+            if (i == ServerContract.MAKE_LOBBY){
+                int y = dataIn.readInt();
+                System.out.println("Lobby : "+y);
+                return y;
+            }
+        } catch (IOException ex) {
+            System.out.println("IO Exception from makeLobby() CSC");
+        }
+        return -1;
+    }
+
+    public boolean getInLobby(int lobbbyId){
+        try {
+            System.out.println("getInLobby");
+            //Send condition
+            dataOut.writeInt(ServerContract.GET_IN_LOBBY);
+            dataOut.writeInt(lobbbyId);
+            dataOut.flush();
+            System.out.println("dataOut.flush()");
+            int i = dataIn.readInt();
+            System.out.println("ServerContract.GET_IN_LOBBY : "+i);
+            if (i == ServerContract.GET_IN_LOBBY){
+                boolean isInLobby = dataIn.readBoolean();
+                System.out.println("Lobby : "+isInLobby);
+                return isInLobby;
+            }
+        } catch (IOException ex) {
+            System.out.println("IO Exception from makeLobby() CSC");
+        }
+        System.out.println("getInLobby error");
+        return false;
+    }
+
     public Room getCurrentRoom() {
         return currentRoom;
     }
@@ -55,9 +94,10 @@ public class ClientSideConnectionTest {
             dataOut.writeInt(2);
             dataOut.flush();
         } catch (IOException ex) {
-            System.out.println("IO Exception from sendButtonNum() CSC");
+            System.out.println("IO Exception from sendNorth() CSC");
         }
     }
+
     public void sendSouth() {
         try {
             //Send condition
@@ -67,6 +107,7 @@ public class ClientSideConnectionTest {
             System.out.println("IO Exception from sendButtonNum() CSC");
         }
     }
+
     public void sendEast() {
         try {
             //Send condition
@@ -76,6 +117,7 @@ public class ClientSideConnectionTest {
             System.out.println("IO Exception from sendButtonNum() CSC");
         }
     }
+
     public void sendWest() {
         try {
             //Send condition
@@ -85,43 +127,23 @@ public class ClientSideConnectionTest {
             System.out.println("IO Exception from sendButtonNum() CSC");
         }
     }
+
     //Send other players action to make map
     public void sendMakeMap() {
         try {
             String str = "";
-            //byte[] data=str.getBytes("UTF-8");
-            //dataOut.writeInt(data.length);
-            //dataOut.write(data);
             dataOut.writeInt(1);
             str = Serializator.convertToByteString(map);
             byte[] data = str.getBytes("UTF-8");
             dataOut.writeInt(data.length);
             System.out.println(data.length);
             dataOut.write(data);
-            //TODO: if it work erase the comment block
-                /*dataOut.writeInt(map.getMainPath().size() + map.getSubPaths().size());
-                int index;
-                for (Room r : map.getMainPath()) {
-                    index = map.getMap().indexOf(new Room(r.getY(), r.getX()));
-                    r = map.getMap().get(index);
-                    str = Serializator.serializeRoom(r);
-                    byte[] data = str.getBytes("UTF-8");
-                    dataOut.writeInt(data.length);
-                    dataOut.write(data);
-                }
-                for (Room r : map.getSubPaths()) {
-                    index = map.getMap().indexOf(new Room(r.getY(), r.getX()));
-                    r = map.getMap().get(index);
-                    str = Serializator.serializeRoom(r);
-                    byte[] data = str.getBytes("UTF-8");
-                    dataOut.writeInt(data.length);
-                    dataOut.write(data);
-                }*/
             dataOut.flush();
         } catch (IOException ex) {
             System.out.println("IO Exception from sendButtonNum() CSC");
         }
     }
+
     //TODO Send to the server the starting of a fight
     public void sendFight() {
         try {
@@ -149,6 +171,7 @@ public class ClientSideConnectionTest {
             System.out.println("IO Exception from sendFight() CSC");
         }
     }
+
     //TODO Send to the server the following of the fight
     public void sendCombat(List<ICharacters> enemies) {
         try {
@@ -179,6 +202,7 @@ public class ClientSideConnectionTest {
             System.out.println("IO Exception from sendButtonNum() CSC");
         }
     }
+
     public int receiveButtonNum() {
         int n = -1;
         try {
@@ -188,6 +212,7 @@ public class ClientSideConnectionTest {
         }
         return n;
     }
+
     //Get list of rooms
     public Map receiveRooms() {
         Map m = null;
@@ -225,6 +250,7 @@ public class ClientSideConnectionTest {
 
         return m;
     }
+
     public List<ICharacters> recieveCharacters(){
         //Setup a list of characters
         List<ICharacters> characters = new ArrayList<ICharacters>();
@@ -253,6 +279,7 @@ public class ClientSideConnectionTest {
         }
         return characters;
     }
+
     //Close connection with the server
     public void closeConnection() {
         try {

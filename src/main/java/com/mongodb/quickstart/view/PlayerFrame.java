@@ -171,19 +171,26 @@ public class PlayerFrame extends JFrame implements ItemListener {
                 Document filter = new Document("_id", user.getId());
                 user = UserDb.updateUser(user, filter);
                 if(user != null){
-                    this.setVisible(false);
-                    JFrame frame = new GameFrame(user, player);
+                    nextFrame();
                 }
             } else {
                 user.getPlayers().add(player);
                 Document filter = new Document("_id", user.getId());
                 user = UserDb.updateUser(user, filter);
                 if(user != null){
-                    this.setVisible(false);
-                    JFrame frame = new GameFrame(user, player);
+                    nextFrame();
                 }
             }
         }
+    }
+
+    public void nextFrame(){
+        this.setVisible(false);
+        if(user != null && player != null){
+            JFrame frame = new LobbyFrame(user, player);
+        }
+
+        //JFrame frame = new GameFrame(user, player);
     }
 
     @Override

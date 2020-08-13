@@ -1,15 +1,10 @@
 package com.mongodb.quickstart.server;
 
-import com.mongodb.quickstart.models.Player;
-import com.mongodb.quickstart.models.Room;
-
-import java.util.List;
-
-public class Loby {
+public class Lobby {
     private int id;
     private boolean isRunning;
 
-    public Loby(int id) {
+    public Lobby(int id) {
         this.id = id;
         this.isRunning = false;
     }
@@ -38,7 +33,7 @@ public class Loby {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        Loby other = (Loby) obj;
+        Lobby other = (Lobby) obj;
         if (id != other.id)
             return false;
         return true;

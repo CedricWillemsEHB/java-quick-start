@@ -270,6 +270,121 @@ public class GameFrame extends JFrame {
             }
         }
     }
+    public GameFrame(User user,Player player, ClientSideConnectionTest csc) {
+        super("Dungeons & Dragons | Adventurer: "+player.getName());
+        //Make a new client side Socket and connect to the server side
+        //TODO test class ClientSideConnectionTest
+        this.csc = csc;
+        setLayout(new BorderLayout());
+
+        imagePanel = new ImagePanel();
+        toolbar = new Toolbar(player.isDM());
+        this.user = user;
+        this.player = player;
+        //Setup actions for the buttons
+        toolbar.setStringListener(new StringListener() {
+            @Override
+            public void makeMap() throws IOException {
+                if (map == null) {
+                    generatePath();
+                    //TODO test class ClientSideConnectionTest
+                    csc.setMap(map);
+                    csc.setCurrentRoom(currentRoom);
+                    csc.sendMakeMap();
+                }
+                generateMapImage();
+                showMapImage();
+
+            }
+
+            @Override
+            public void clickNorth() throws IOException {
+                // Go up
+                if(currentRoom.isGoUp()) {
+                    csc.sendNorth();
+                    goNorth();
+                    generateMapImage();
+                    showMapImage();
+                }
+            }
+
+            @Override
+            public void clickSouth() throws IOException {
+                // Go down
+                if(currentRoom.isGoDown()) {
+                    csc.sendSouth();
+                    goSouth();
+                    generateMapImage();
+                    showMapImage();
+                }
+            }
+
+            @Override
+            public void clickEast() throws IOException {
+                // Go right
+                if(currentRoom.isGoRight()) {
+                    csc.sendEast();
+                    goEast();
+                    generateMapImage();
+                    showMapImage();
+                }
+            }
+
+            @Override
+            public void clickWest() throws IOException {
+                // Go left
+                if(currentRoom.isGoLeft()) {
+                    csc.sendWest();
+                    goWest();
+                    generateMapImage();
+                    showMapImage();
+                }
+
+            }
+
+            @Override
+            public void clickFight() throws IOException {
+                // The player attack the monster
+                System.out.println(player.getName() + " fight the monsters!");
+                attackEnemy();
+            }
+
+            @Override
+            public void clickRun() throws IOException {
+                // The player run away from the monster
+                System.out.println(player.getName() + " run away from the monsters!");
+                csc.sendButtonNum(9);
+            }
+        });
+        add(imagePanel, BorderLayout.CENTER);
+        add(toolbar, BorderLayout.SOUTH);
+
+        setSize(600,600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+        //If player isn't a dungeon master, wait for a input of the dungeon master
+        if (!player.isDM()) {
+            try {
+                //Show start page for players
+                BufferedImage image = ImageIO.read(new File(imageUrl + "startPlayer.png"));
+                imagePanel.setImage(image);
+            } catch(Exception e) {
+                System.out.println(e.getMessage());
+            }
+            //Disable the buttons
+            toolbar.toggleButtons(player.isDM());
+            //wait for a input of the dungeon master
+            nextAction();
+        } else {
+            try {
+                //Show start page for dungeon master
+                BufferedImage image = ImageIO.read(new File(imageUrl + "startDM.png"));
+                imagePanel.setImage(image);
+            } catch(Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
     //Make thread to wait for a input of the server
     public void nextAction() {
         Thread t = new Thread(new Runnable() {
@@ -780,7 +895,6 @@ public class GameFrame extends JFrame {
         File[] imgFiles = new File[chunks];
         for (int i = 0; i < chunks; i++) {
             imgFiles[i] = new File(imageMapUrl + i + ".png");
-            System.out.println("File name : " + imgFiles[i].getName());
         }
 
         //creating a buffered image array from image files

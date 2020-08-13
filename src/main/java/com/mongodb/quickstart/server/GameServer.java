@@ -8,13 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class GameServer implements LobyListener {
+public class GameServer implements LobbyListener {
     private ServerSocket ss;
     private List<ServerSideConnection> players;
     private int numPlayers= 0;
-    private int numDungeonmaster;
-    private boolean partyReady;
-    private List<Loby> lobies;
+    private List<Lobby> lobies;
 
     public GameServer() {
         players = new ArrayList<ServerSideConnection>();
@@ -48,15 +46,19 @@ public class GameServer implements LobyListener {
 
     @Override
     public int makeLobyGetID() {
-        Loby loby = null;
+        Lobby lobby = null;
         do{
             Random rand = new Random();
             //generate random values from 0-1000000
             int int_random = rand.nextInt(1000000);
-            loby = new Loby(int_random);
-        } while (!lobies.contains(loby));
+            lobby = new Lobby(int_random);
+            if (!lobies.contains(lobby)){
+                lobies.add(lobby);
+                break;
+            }
+        } while (true);
 
-        return loby.getId();
+        return lobby.getId();
     }
 
     @Override
@@ -70,6 +72,12 @@ public class GameServer implements LobyListener {
         return playersInLoby;
     }
 
+    @Override
+    public boolean getInLobby(int id) {
+        Lobby lobby = new Lobby(id);
+        return lobies.contains(lobby);
+    }
+
     private class ServerSideConnection implements Runnable {
         private Socket socket;
         private DataInputStream dataIn;
@@ -77,13 +85,14 @@ public class GameServer implements LobyListener {
         private int playerID;
         private int lobyId = -1;
         private List<ServerSideConnection> playersInLoby = new ArrayList<>();
-        private LobyListener lobyListener;
+        private LobbyListener lobbyListener;
+        private int numDungeonmaster;
 
 
-        public ServerSideConnection(Socket s, int playerID, LobyListener lobyListener) {
+        public ServerSideConnection(Socket s, int playerID, LobbyListener lobbyListener) {
             socket = s;
             this.playerID = playerID;
-            this.lobyListener = lobyListener;
+            this.lobbyListener = lobbyListener;
             try {
                 dataIn = new DataInputStream(socket.getInputStream());
                 dataOut = new DataOutputStream(socket.getOutputStream());
@@ -109,19 +118,32 @@ public class GameServer implements LobyListener {
             // TODO Auto-generated method stub
             String command = "";
             String tmp = "";
+            if(lobyId >= 0){
+                System.out.println("playerID = " + playerID + ", lobyId = " + lobyId);
+            } else {
+                System.out.println("playerID = " + playerID + ", lobyId = null");
+            }
             int receiverID= 0;
             boolean firstTime = true;
             try {
-                //dataOut.writeInt(playerID);
-
                 while(true) {
+                    if(lobyId >= 0){
+                        System.out.println("playerID = " + playerID + ", lobyId = " + lobyId);
+                    } else {
+                        System.out.println("playerID = " + playerID + ", lobyId = null");
+                    }
                     //TODO
                     int condition=dataIn.readInt();
                     switch(condition) {
                         case ServerContract.SHOW_MAP:
                             if(firstTime) {
+                                //TODO make another function to setup numDungeonmaster
                                 numDungeonmaster = playerID;
                                 firstTime = false;
+                            }
+                            playersInLoby = new ArrayList<>();
+                            for (Object o : lobbyListener.getPlayersInLoby(lobyId)) {
+                                playersInLoby.add((ServerSideConnection) o);
                             }
                             //int maxRoom = dataIn.readInt();
                             int length = dataIn.readInt();
@@ -130,42 +152,24 @@ public class GameServer implements LobyListener {
                             dataIn.readFully(data);
                             String str=new String(data,"UTF-8");
                             Map m = (Map) Serializator.convertFromByteString(str);
-                            /*for(int i = 0 ; i < maxRoom; i++) {
-                                int length = dataIn.readInt();
-                                byte[] data=new byte[length];
-                                dataIn.readFully(data);
-                                String str=new String(data,"UTF-8");
-                                listStrings.add(str);
-                                System.out.println(str);
-                                Room r = Serializator.deserializeRoom(str);
-                                listRooms.add(r);
-
-                                System.out.println(r.toString());
-                            }*/
-                            receiverID=0;
-                            for(ServerSideConnection player : players) {
-                                if(receiverID!=playerID) {
-                                    player.dataOut.writeInt(1);
+                            for(ServerSideConnection player : playersInLoby) {
+                                if(playerID!=player.playerID) {
+                                    player.dataOut.writeInt(ServerContract.SHOW_MAP);
                                     str = Serializator.convertToByteString(m);
                                     byte[] data2 = str.getBytes("UTF-8");
                                     player.dataOut.writeInt(data2.length);
-                                    System.out.println("data2.length: " + data2.length);
+                                    System.out.println("To player = "+ player.playerID+"data2.length: " + data2.length);
                                     player.dataOut.write(data);
                                     dataOut.flush();
-                                    /*player.dataOut.writeInt(maxRoom);
-                                    for(Room str : listRooms) {
-                                        player.sendRoom(str);
-                                    }*/
                                 }
                                 receiverID++;
                             }
-
                             break;
                         case ServerContract.GO_NORTH:
                             receiverID=0;
-                            for(ServerSideConnection player : players) {
+                            for(ServerSideConnection player : playersInLoby) {
                                 if(receiverID!=playerID) {
-                                    player.dataOut.writeInt(2);
+                                    player.dataOut.writeInt(ServerContract.GO_NORTH);
                                     dataOut.flush();
                                 }
                                 receiverID++;
@@ -173,9 +177,9 @@ public class GameServer implements LobyListener {
                             break;
                         case ServerContract.GO_SOUTH:
                             receiverID=0;
-                            for(ServerSideConnection player : players) {
+                            for(ServerSideConnection player : playersInLoby) {
                                 if(receiverID!=playerID) {
-                                    player.dataOut.writeInt(3);
+                                    player.dataOut.writeInt(ServerContract.GO_SOUTH);
                                     dataOut.flush();
                                 }
                                 receiverID++;
@@ -183,9 +187,9 @@ public class GameServer implements LobyListener {
                             break;
                         case ServerContract.GO_EAST:
                             receiverID=0;
-                            for(ServerSideConnection player : players) {
+                            for(ServerSideConnection player : playersInLoby) {
                                 if(receiverID!=playerID) {
-                                    player.dataOut.writeInt(4);
+                                    player.dataOut.writeInt(ServerContract.GO_EAST);
                                     dataOut.flush();
                                 }
                                 receiverID++;
@@ -193,9 +197,9 @@ public class GameServer implements LobyListener {
                             break;
                         case ServerContract.GO_WEST:
                             receiverID=0;
-                            for(ServerSideConnection player : players) {
+                            for(ServerSideConnection player : playersInLoby) {
                                 if(receiverID!=playerID) {
-                                    player.dataOut.writeInt(5);
+                                    player.dataOut.writeInt(ServerContract.GO_WEST);
                                     dataOut.flush();
                                 }
                                 receiverID++;
@@ -206,7 +210,7 @@ public class GameServer implements LobyListener {
                             List<ServerSideConnection> playersInFight = new ArrayList<ServerSideConnection>();
                             str = "";
                             receiverID=0;
-                            for(ServerSideConnection player : players) {
+                            for(ServerSideConnection player : playersInLoby) {
                                 if(receiverID!=playerID) {
                                     playersInFight.add(player);
                                 }
@@ -223,6 +227,23 @@ public class GameServer implements LobyListener {
                             }
                             startFight(playersInFight, enemies);
                             //TODO send the enemies back to the DM
+                            break;
+                        case ServerContract.GET_FROM_FIGHT:
+                            break;
+                        case ServerContract.MAKE_LOBBY:
+                            System.out.println("MAKE_LOBBY");
+                            lobyId = lobbyListener.makeLobyGetID();
+                            System.out.println("MAKE_LOBBY : " + lobyId);
+                            dataOut.writeInt(ServerContract.MAKE_LOBBY);
+                            dataOut.writeInt(lobyId);
+                            dataOut.flush();
+                            break;
+                        case ServerContract.GET_IN_LOBBY:
+                            lobyId = dataIn.readInt();
+                            dataOut.writeInt(ServerContract.GET_IN_LOBBY);
+                            dataOut.writeBoolean(getInLobby(lobyId));
+                            dataOut.flush();
+                            System.out.println("GET_IN_LOBBY : " + lobyId);
                             break;
                     }
                 }
