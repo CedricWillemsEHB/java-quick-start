@@ -1,8 +1,9 @@
 package com.ehb.dnd.view;
 
-import java.awt.event.*;
-import java.awt.*;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 class solve extends JFrame implements ItemListener {
 
     // frame

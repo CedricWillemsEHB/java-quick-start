@@ -1,14 +1,12 @@
 package com.ehb.dnd.database;
 
+import com.ehb.dnd.model.User;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.ReturnDocument;
-import com.ehb.dnd.model.User;
 import org.bson.Document;
-
-import static com.mongodb.client.model.Filters.eq;
 
 public class UserDb {
     private final static String DATABASE = "dnd";

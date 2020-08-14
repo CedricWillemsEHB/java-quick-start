@@ -1,12 +1,14 @@
 package com.ehb.dnd.model;
 
+import java.io.IOException;
+import java.net.Socket;
+
+
 public class Test {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
 
-        Room r1 = new Room(1,2);
-        Room r2 = new Room(1,2);
-        System.out.println("" + r1.equals(r2));
+        Socket socket = new Socket("localhost", 51734);
 
     }
     /*User user = new User();

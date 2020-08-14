@@ -1,7 +1,7 @@
 package com.ehb.dnd.model;
 
-import com.lambdaworks.crypto.SCryptUtil;
 import com.ehb.dnd.database.UserDb;
+import com.lambdaworks.crypto.SCryptUtil;
 import org.bson.Document;
 
 public class ScryptPasswordHashingDemo {
