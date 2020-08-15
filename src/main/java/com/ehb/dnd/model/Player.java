@@ -13,7 +13,6 @@ public class Player {
     private int hp;
     private int attack;
     private boolean isDM;
-    public ClientSideConnection csc;
 
     public Player() {
     }
@@ -31,14 +30,6 @@ public class Player {
         this.hp = hp;
         this.attack = attack;
         this.isDM = isDM;
-    }
-
-    public ClientSideConnection getCsc() {
-        return csc;
-    }
-
-    public void setCsc(ClientSideConnection csc) {
-        this.csc = csc;
     }
 
     public ObjectId getId() {
@@ -97,57 +88,5 @@ public class Player {
         sb.append('}');
         return sb.toString();
     }
-    public class ClientSideConnection{
 
-        private Socket socket;
-        private DataInputStream dataIn;
-        private DataOutputStream dataOut;
-
-        public ClientSideConnection() {
-            System.out.println("----Client----");
-            try {
-                socket = new Socket("localhost", 51734);
-                dataIn = new DataInputStream(socket.getInputStream());
-                dataOut = new DataOutputStream(socket.getOutputStream());
-            } catch (IOException ex) {
-                System.out.println("IO Exception from CSC constructor");
-            }
-        }
-        public void sendMakeMap(Map map, int x, int y) {
-            try {
-
-                dataOut.writeInt(y);
-                dataOut.flush();
-            } catch (IOException ex) {
-                System.out.println("IO Exception from sendButtonNum() CSC");
-            }
-        }
-        public void sendButtonNum(int n) {
-            try {
-                dataOut.writeInt(n);
-                dataOut.flush();
-            } catch (IOException ex) {
-                System.out.println("IO Exception from sendButtonNum() CSC");
-            }
-        }
-        public int receiveButtonNum() {
-            int n = -1;
-            try {
-                n = dataIn.readInt();
-                System.out.println("Player # clicked button #" + n);
-            } catch(IOException ex) {
-                System.out.println("IO Exception from receiveButtonNum() CSC");
-            }
-            return n;
-        }
-
-        public void closeConnection() {
-            try {
-                socket.close();
-                System.out.println("---CONNECTION CLOSED---");
-            } catch(IOException ex) {
-                System.out.println("IO Exception from closeConnestion() CSC");
-            }
-        }
-    }
 }

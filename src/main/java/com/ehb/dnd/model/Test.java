@@ -1,15 +1,26 @@
 package com.ehb.dnd.model;
 
+import com.google.gson.Gson;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+import org.springframework.boot.json.GsonJsonParser;
+import org.springframework.boot.json.JsonParser;
+
 import java.io.IOException;
 import java.net.Socket;
-
+import java.net.URL;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.util.List;
 
 public class Test {
 
     public static void main(String[] args) throws InterruptedException, IOException {
-
-        Socket socket = new Socket("localhost", 51734);
-
+        Socket s = new Socket("localhost", 51734);
+        
     }
     /*User user = new User();
         user.setEmail("test@test.com");

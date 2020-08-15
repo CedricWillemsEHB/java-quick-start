@@ -4,11 +4,13 @@ import com.ehb.dnd.database.UserDb;
 import com.lambdaworks.crypto.SCryptUtil;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class User {
+
     private ObjectId id;
     private String email;
     private String password;
