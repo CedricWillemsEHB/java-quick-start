@@ -19,6 +19,7 @@ public class UserDb {
     }
 
     public static boolean insertOneUser(User newUser){
+        //TODO DONE
         // create a new grade.
         try {
             MongoClient mongoClient = setup();
@@ -42,6 +43,7 @@ public class UserDb {
 
     public static User findUserByName(Document filter){
         // find this grade.
+
         try{
             MongoClient mongoClient = setup();
             MongoDatabase db = mongoClient.getDatabase(DATABASE);

@@ -2,6 +2,7 @@ package com.ehb.dnd.view;
 
 
 
+import com.ehb.dnd.database.UserAPI;
 import com.ehb.dnd.database.UserDb;
 import com.ehb.dnd.model.Player;
 import com.ehb.dnd.model.User;
@@ -168,15 +169,13 @@ public class PlayerFrame extends JFrame implements ItemListener {
             System.out.println("User : " + user.toString());
             if(currentCharater >= 0){
                 user.getPlayers().set(currentCharater, player);
-                Document filter = new Document("_id", user.getId());
-                user = UserDb.updateUser(user, filter);
+                user = UserAPI.updateUser(user);
                 if(user != null){
                     nextFrame();
                 }
             } else {
-                user.getPlayers().add(player);
-                Document filter = new Document("_id", user.getId());
-                user = UserDb.updateUser(user, filter);
+                user.addPlayer(player);
+                user = UserAPI.updateUser(user);
                 if(user != null){
                     nextFrame();
                 }
@@ -189,8 +188,6 @@ public class PlayerFrame extends JFrame implements ItemListener {
         if(user != null && player != null){
             JFrame frame = new LobbyFrame(user, player);
         }
-
-        //JFrame frame = new GameFrame(user, player);
     }
 
     @Override

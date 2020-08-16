@@ -1,11 +1,16 @@
 package com.ehb.dnd.model;
 
-import com.ehb.dnd.database.UserDb;
+import com.ehb.dnd.database.UserAPI;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.lambdaworks.crypto.SCryptUtil;
-import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.map.JsonSerializer;
+import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.springframework.data.annotation.Id;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +20,7 @@ public class User {
     private String email;
     private String password;
     private List<Player> players;
+
 
     public User() {
         players = new ArrayList<>();
@@ -64,12 +70,19 @@ public class User {
         this.players = players;
     }
 
+    public void addPlayer(Player player){
+        if(players == null){
+            players = new ArrayList<>();
+        }
+        players.add(player);
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer("User{");
         sb.append("id=").append(id);
-        sb.append(", x=").append(email);
-        sb.append(", y=").append(password);
+        sb.append(", email=").append(email);
+        sb.append(", password=").append(password);
         sb.append(", Players= [");
         if(players != null){
             for (Player p: players) {
@@ -82,8 +95,8 @@ public class User {
     }
 
     public static User checkUserPassword(String email, String password){
-        Document filter = new Document("email", email);
-        User user = UserDb.findUserByName(filter);
+
+        User user = UserAPI.findUserByEmail(email);
 
         if (user != null){
             System.out.println("User checked: " + user.getPassword());
@@ -100,9 +113,44 @@ public class User {
         System.out.println(generatedSecuredPasswordHash);
         user.setPassword(generatedSecuredPasswordHash);
         System.out.println("User1 : " + user.toString());
-        if(UserDb.insertOneUser(user)){
+        if(UserAPI.insertOneUser(user)){
             return true;
         }
         return false;
+    }
+    public String toJson(){
+        final StringBuffer sb = new StringBuffer("{");
+        sb.append("\"id\": \"").append(id.toString());
+        sb.append("\", \"email\":\"").append(email);
+        sb.append("\", \"password\":\"").append(password);
+        sb.append("\", \"players\": [");
+        if(players != null){
+            for (int i = 0; i <players.size();i++) {
+                if (i==0){
+                    sb.append("{");
+                }else {
+                    sb.append(",{");
+                }
+
+                if (players.get(i).getId() != null){
+                    sb.append("\"id\": \"").append(players.get(i).getId());
+                    sb.append("\", \"name\":\"").append(players.get(i).getName());
+                }
+                else{
+                    sb.append("\"id\": ").append("null");
+                    sb.append(", \"name\":\"").append(players.get(i).getName());
+                }
+                sb.append("\", \"hp\":").append(players.get(i).getHp());
+                sb.append(", \"attack\":").append(players.get(i).getAttack());
+                if(players.get(i).isDM())
+                    sb.append(", \"dm\":").append("true");
+                else
+                    sb.append(", \"dm\":").append("false");
+                sb.append("}");
+            }
+        }
+
+        sb.append("]}");
+        return sb.toString();
     }
 }

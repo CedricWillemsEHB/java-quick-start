@@ -1,5 +1,6 @@
 package com.ehb.dnd.view;
 
+import com.ehb.dnd.database.UserAPI;
 import com.ehb.dnd.database.UserDb;
 import com.ehb.dnd.model.User;
 import org.bson.Document;
@@ -105,9 +106,10 @@ public class UserFrame extends JFrame {
         User user = User.checkUserPassword(userText.getText(),passwordText.getText());
         if(user == null){
             user = new User(userText.getText(),passwordText.getText());
+            System.out.println("new User" + user.getPassword());
             if(User.insertUserWithHash(user)){
-                Document filter = new Document("email", user.getEmail());
-                user = UserDb.findUserByName(filter);
+                user = UserAPI.findUserByEmail(user.getEmail());
+                System.out.println("onClickRegister" + user.getPassword());
                 if(user != null){
                     this.setVisible(false);
                     JFrame frame = new PlayerFrame(user);
